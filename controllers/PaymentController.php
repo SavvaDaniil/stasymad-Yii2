@@ -27,11 +27,6 @@ use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
 class PaymentController extends Controller {
 
     
-    private $clientIdTest = "AU4P3R449vDGPTMJVCuMnPeWE8ARLgzutobcvX0uhQlMvBKDam9Rxa6nPAD3rh3gerCvcYYXosEFIbN7";
-    private $clientSecretTest = "ELo_MtVwCKyubAbn_eg07uTg95DvMegq4JnIkgnsU0NiMfEt7p23f_4tIqla2gRtdgUzRXpNRs2wIcOK";
-
-    private $clientId = "AcAA5xlX4REfJCRhOLo5vxxVaPIrAgi1RIuot_RFBulC39GgSaul7380M3ycUQ2tYjX2w_x-0ol7ir4g";
-    private $clientSecret = "EF6ClrZy0swWLp2xmMdQWHs3fR4DX0p2zOCOXuS-ic3tOSUEjgbkiA7USVqp4VPiri9uStPmNeUvhq10";
 
     public function actionIndex(){
 
@@ -122,7 +117,6 @@ class PaymentController extends Controller {
         $transaction = new \PayPal\Api\Transaction();
         $transaction->setAmount($amount);
 
-        $redirectUrls = new \PayPal\Api\RedirectUrls();
         $redirectUrls
             ->setReturnUrl("https://stasymad.com/payment/check")
             ->setCancelUrl("https://stasymad.com/payment/cansel");
@@ -138,21 +132,9 @@ class PaymentController extends Controller {
         $urlSuccess;
         $exception;
         try {
-            $paymentPayPal->create($apiContext);
-            //echo $paymentPayPal;
-        
-            //echo "\n\nRedirect user to approval_url: " . $payment->getApprovalLink() . "\n";
-            $url = $paymentPayPal->getApprovalLink();
-
-            $payment -> paypal_payment_id = $paymentPayPal -> id;
-            $payment -> save();
-            return $this -> render("index", compact("url"));
+			
         }
         catch (\PayPal\Exception\PayPalConnectionException $ex) {
-            // This will print the detailed information on the exception.
-            //REALLY HELPFUL FOR DEBUGGING
-            //echo $ex->getData();
-            $exception = $ex->getData();
             return $this -> render("errorPrepare", compact("exception"));
         }
 
@@ -210,14 +192,7 @@ class PaymentController extends Controller {
             $resultCheck = $paymentPayPal -> get($paymentId, $apiContext);
 
             if($resultCheck -> payer -> status == "VERIFIED"){
-                $payment -> status = 1;
-                $payment -> date_of_done = date("Y-m-d H:i:s");
-                $payment -> save();
-                
-                CartService::clearCart();
-                $accessOfUserList = AccessOfUserPrepareService::generateAndReturnAccessesOfUserAfterPaymentOrReturnNull($payment -> id);
-                PaymentObserver::reportAboutNewPaymentAndNewAccessesOfUser($accessOfUserList, $user, $payment);
-    
+				
                 return $this->redirect(['/payment/success']);
             } else {
 
